@@ -21,7 +21,7 @@ export default function CodePreview() {
           </div>
 
 
-          <div className="grid md:grid-cols-4 min-h-[400px]">
+          <div className="grid md:grid-cols-4 min-h-100">
 
             <div className="p-5 border-r border-gray-800 text-gray-400">
               <p>📁 src</p>
