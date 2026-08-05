@@ -6,6 +6,17 @@ info:
 http:
   method: POST
   url: http://localhost:3000/api/auth/callback/credentials
+  body:
+    type: form-urlencoded
+    data:
+      - name: csrfToken
+        value: 57fb5789ff76d01b97f3f82a2f25bd4daa7da553afc4b82857475ca2484ebe72
+      - name: email
+        value: shubh@example.com
+      - name: password
+        value: "12345678"
+      - name: json
+        value: "true"
   auth: inherit
 
 settings:

@@ -2,10 +2,12 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
 
 model User {
   id        String    @id @default(cuid())
@@ -16,6 +18,7 @@ model User {
 
   projects  Project[]
 }
+
 
 model Project {
   id          String   @id @default(cuid())
@@ -28,5 +31,39 @@ model Project {
   updatedAt   DateTime @updatedAt
 
   ownerId     String
-  owner        User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  folders     Folder[]
+  files       File[]
+}
+
+
+model Folder {
+  id        String   @id @default(cuid())
+  name      String
+
+  createdAt DateTime @default(now())
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  files     File[]
+}
+
+
+model File {
+  id        String   @id @default(cuid())
+
+  name      String
+  content   String   @default("")
+  language  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  folderId String?
+  folder   Folder? @relation(fields: [folderId], references: [id], onDelete: Cascade)
 }
