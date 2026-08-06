@@ -1,5 +1,6 @@
 "use client";
 
+import MonacoEditor from "./MonacoEditor";
 import { useState } from "react";
 
 type FileType = {
@@ -92,10 +93,17 @@ export default function ProjectWorkspace({
             </p>
 
 
-            <pre className="mt-6 rounded-lg bg-black p-6 text-white">
-              {selectedFile.content ||
-                "// Empty file"}
-            </pre>
+           <div className="mt-6 overflow-hidden rounded-lg border">
+
+            <MonacoEditor
+             value={
+              selectedFile.content ||
+              "// Empty file"
+            }
+            language={selectedFile.language}
+          />
+
+         </div>
 
 
           </div>
