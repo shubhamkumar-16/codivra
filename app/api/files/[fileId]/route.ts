@@ -55,3 +55,41 @@ export async function GET(
 
   }
 }
+//////////////////////////////////////////////////////////////////
+
+export async function PATCH(
+  req: Request,
+  context: {
+    params: Promise<{
+      fileId: string;
+    }>;
+  }
+) {
+  try {
+    const params = await context.params;
+
+    const { content } = await req.json();
+
+    const updatedFile = await prisma.file.update({
+      where: {
+        id: params.fileId,
+      },
+      data: {
+        content,
+      },
+    });
+
+    return NextResponse.json(updatedFile);
+  } catch (error) {
+    console.error("PATCH FILE ERROR:", error);
+
+    return NextResponse.json(
+      {
+        error: "Failed to update file",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
+}
