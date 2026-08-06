@@ -96,12 +96,10 @@ export default function ProjectWorkspace({
            <div className="mt-6 overflow-hidden rounded-lg border">
 
             <MonacoEditor
-             value={
-              selectedFile.content ||
-              "// Empty file"
-            }
-            language={selectedFile.language}
-          />
+             fileId={selectedFile.id}
+             value={selectedFile.content || ""}
+             language={selectedFile.language}
+            />
 
          </div>
 
