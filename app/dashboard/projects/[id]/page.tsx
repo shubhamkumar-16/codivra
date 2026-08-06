@@ -1,13 +1,12 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import FileExplorer from "./components/FileExplorer";
+import ProjectWorkspace from "./components/ProjectWorkspace";
 
 type Props = {
   params: Promise<{
     id: string;
   }>;
 };
-
 
 export default async function ProjectPage({ params }: Props) {
 
@@ -71,9 +70,7 @@ export default async function ProjectPage({ params }: Props) {
 
 
           <p className="mt-3 text-sm text-gray-500">
-            Created:
-            {" "}
-            {project.createdAt.toDateString()}
+            Created: {project.createdAt.toDateString()}
           </p>
 
         </div>
@@ -85,34 +82,9 @@ export default async function ProjectPage({ params }: Props) {
 
         <div className="mt-8 flex min-h-125 overflow-hidden rounded-xl bg-white shadow">
 
-
-          {/* File Explorer */}
-
-          <FileExplorer 
+          <ProjectWorkspace
             files={project.files}
           />
-
-
-
-          {/* Editor Area */}
-
-          <div className="flex flex-1 items-center justify-center border-l">
-
-            <div className="text-center">
-
-              <h2 className="text-2xl font-bold">
-                Project Workspace
-              </h2>
-
-
-              <p className="mt-2 text-gray-500">
-                Select a file to start editing.
-              </p>
-
-            </div>
-
-          </div>
-
 
         </div>
 

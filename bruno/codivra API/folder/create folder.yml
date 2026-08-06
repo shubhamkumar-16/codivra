@@ -1,17 +1,16 @@
 info:
-  name: "create file "
+  name: create folder
   type: http
   seq: 1
 
 http:
   method: POST
-  url: http://localhost:3000/api/projects/cmsfosdm80001fnukrcxnxdbx/files
+  url: http://localhost:3000/api/projects/cmsfosdm80001fnukrcxnxdbx/folders
   body:
     type: json
     data: |-
       {
-        "name": "app.ts",
-        "language": "typescript"
+        "name": "src"
       }
   auth: inherit
 

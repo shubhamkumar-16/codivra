@@ -1,26 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// =========================
-// Create File
-// POST /api/projects/[id]/files
-// =========================
-
 export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Get project id from URL
     const { id } = await params;
 
+    // Read request body
     const body = await req.json();
 
-    const { name, language } = body;
+    const { name } = body;
 
-    if (!name || !language) {
+    // Validation
+    if (!name) {
       return NextResponse.json(
         {
-          error: "Name and language required",
+          error: "Folder name is required",
         },
         {
           status: 400,
@@ -28,24 +26,24 @@ export async function POST(
       );
     }
 
-    const file = await prisma.file.create({
-      data: {
-        name,
-        language,
-        projectId: id,
-        content: "",
-      },
-    });
+    // Create folder
+    const folder = await prisma.folder.create({
+  data: {
+    name,
+    projectId: id,
+  },
+});
 
-    return NextResponse.json(file, {
+    return NextResponse.json(folder, {
       status: 201,
     });
+
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
       {
-        error: "Failed to create file",
+        error: "Failed to create folder",
       },
       {
         status: 500,
@@ -54,10 +52,11 @@ export async function POST(
   }
 }
 
+
+
 // =========================//
-// GET /api/projects/[id]/files
-// Get All File
-// =========================//
+
+
 
 export async function GET(
   req: Request,
@@ -66,7 +65,7 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const files = await prisma.file.findMany({
+    const folders = await prisma.folder.findMany({
       where: {
         projectId: id,
       },
@@ -75,13 +74,14 @@ export async function GET(
       },
     });
 
-    return NextResponse.json(files);
+    return NextResponse.json(folders);
+
   } catch (error) {
     console.error(error);
 
     return NextResponse.json(
       {
-        error: "Failed to fetch files",
+        error: "Failed to fetch folders",
       },
       {
         status: 500,
