@@ -46,7 +46,6 @@ export default function MonacoEditor({
 
   return (
     <div>
-
       <div className="mb-3 flex justify-end">
         <button
           onClick={saveFile}
