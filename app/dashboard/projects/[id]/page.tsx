@@ -20,9 +20,9 @@ export default async function ProjectPage({ params }: Props) {
 
     include: {
       files: true,
-      folders: true,
+      folders: true, 
     },
-  });
+  }); 
 
 
   if (!project) {
