@@ -3,6 +3,7 @@
 import { useState } from "react";
 import MonacoEditor from "./MonacoEditor";
 import Tabs from "./Tabs";
+import FileExplorer from "./FileExplorer";
 
 type FileType = {
   id: string;
@@ -11,18 +12,34 @@ type FileType = {
   content: string;
 };
 
-type Props = {
-  files: FileType[];
+type FolderType = {
+  id: string;
+  name: string;
 };
 
-export default function ProjectWorkspace({ files }: Props) {
-  const [selectedFile, setSelectedFile] = useState<FileType | null>(null);
-  const [openFiles, setOpenFiles] = useState<FileType[]>([]);
+type Props = {
+  files: FileType[];
+  folders?: FolderType[];
+  projectId?: string;
+};
+
+export default function ProjectWorkspace({
+  files,
+  folders = [],
+  projectId = "",
+}: Props) {
+  const [selectedFile, setSelectedFile] =
+    useState<FileType | null>(null);
+
+  const [openFiles, setOpenFiles] =
+    useState<FileType[]>([]);
 
   function openFile(file: FileType) {
-    const exists = openFiles.some((f) => f.id === file.id);
+    const alreadyOpen = openFiles.some(
+      (item) => item.id === file.id
+    );
 
-    if (!exists) {
+    if (!alreadyOpen) {
       setOpenFiles((prev) => [...prev, file]);
     }
 
@@ -30,50 +47,57 @@ export default function ProjectWorkspace({ files }: Props) {
   }
 
   function selectTab(id: string) {
-    const file = openFiles.find((f) => f.id === id);
+    const file = openFiles.find(
+      (item) => item.id === id
+    );
 
     if (file) {
       setSelectedFile(file);
     }
   }
 
+  function closeTab(id: string) {
+    const index = openFiles.findIndex(
+      (file) => file.id === id
+    );
+
+    if (index === -1) {
+      return;
+    }
+
+    const updatedFiles = openFiles.filter(
+      (file) => file.id !== id
+    );
+
+    setOpenFiles(updatedFiles);
+
+    if (selectedFile?.id === id) {
+      const nextFile =
+        updatedFiles[index] ??
+        updatedFiles[index - 1] ??
+        null;
+
+      setSelectedFile(nextFile);
+    }
+  }
+
   return (
-    <div className="flex h-[80vh] overflow-hidden rounded-xl border bg-white shadow">
+    <div className="flex min-h-125 w-full overflow-hidden rounded-xl border bg-white shadow">
+      {/* File Explorer */}
 
-      {/* ================= Explorer ================= */}
-
-      <div className="w-72 border-r bg-white p-4">
-
-        <h2 className="mb-4 text-lg font-bold">
-          Explorer
-        </h2>
-
-        {files.length === 0 ? (
-          <p className="text-sm text-gray-500">
-            No files yet
-          </p>
-        ) : (
-          files.map((file) => (
-            <div
-              key={file.id}
-              onClick={() => openFile(file)}
-              className={`mb-1 cursor-pointer rounded px-3 py-2 transition ${
-                selectedFile?.id === file.id
-                  ? "bg-blue-100 text-blue-700"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              📄 {file.name}
-            </div>
-          ))
-        )}
-
+      <div className="w-64 shrink-0 border-r bg-gray-50">
+        <FileExplorer
+          files={files}
+          folders={folders}
+          projectId={projectId}
+          activeFileId={selectedFile?.id}
+          onFileSelect={openFile}
+        />
       </div>
 
-      {/* ================= Workspace ================= */}
+      {/* Editor Area */}
 
-      <div className="flex flex-1 flex-col">
-
+      <div className="flex min-w-0 flex-1 flex-col">
         {/* Tabs */}
 
         <Tabs
@@ -83,40 +107,44 @@ export default function ProjectWorkspace({ files }: Props) {
           }))}
           activeId={selectedFile?.id ?? ""}
           onSelect={selectTab}
+          onClose={closeTab}
         />
 
         {/* Editor */}
 
-        <div className="flex-1 p-6">
-
+        <div className="min-h-0 flex-1">
           {!selectedFile ? (
-            <div className="flex h-full items-center justify-center text-lg text-gray-500">
+            <div className="flex h-full min-h-125 items-center justify-center text-gray-500">
               Select a file from the Explorer
             </div>
           ) : (
-            <>
-              <h2 className="text-2xl font-bold">
-                {selectedFile.name}
-              </h2>
+            <div className="flex h-full flex-col">
+              {/* File Information */}
 
-              <p className="mt-2 text-gray-500">
-                Language: {selectedFile.language}
-              </p>
+              <div className="border-b bg-white px-4 py-3">
+                <h2 className="font-semibold">
+                  {selectedFile.name}
+                </h2>
 
-              <div className="mt-6 overflow-hidden rounded-lg border">
+                <p className="text-sm text-gray-500">
+                  {selectedFile.language}
+                </p>
+              </div>
+
+              {/* Monaco Editor */}
+
+              <div className="min-h-0 flex-1">
                 <MonacoEditor
+                  key={selectedFile.id}
                   fileId={selectedFile.id}
-                  value={selectedFile.content ?? ""}
+                  value={selectedFile.content}
                   language={selectedFile.language}
                 />
               </div>
-            </>
+            </div>
           )}
-
         </div>
-
       </div>
-
     </div>
   );
 }
