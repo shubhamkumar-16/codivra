@@ -9,7 +9,7 @@ type Props = {
   files: FileTab[];
   activeId: string;
   onSelect: (id: string) => void; 
-  onClose: (id: string) => void;
+  onClose: (id: string) => void; 
 };
 
 export default function Tabs({

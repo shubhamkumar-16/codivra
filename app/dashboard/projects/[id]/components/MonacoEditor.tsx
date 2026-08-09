@@ -66,7 +66,7 @@ export default function MonacoEditor({
           minimap: {
             enabled: true,
           },
-          fontSize: 16,
+          fontSize: 16, 
           automaticLayout: true,
         }}
       />
