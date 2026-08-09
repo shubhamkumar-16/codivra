@@ -141,7 +141,7 @@ export default function ProjectWorkspace({
                   language={selectedFile.language} 
                 />
               </div>
-            </div>
+            </div> 
           )}
         </div>
       </div>

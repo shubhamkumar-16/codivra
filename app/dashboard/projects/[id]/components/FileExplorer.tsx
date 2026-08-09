@@ -11,7 +11,7 @@ type FileType = {
   id: string;
   name: string;
   language: string;
-  content: string;
+  content: string;  
 };
 
 type Props = {
