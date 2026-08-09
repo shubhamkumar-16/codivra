@@ -138,7 +138,7 @@ export default function ProjectWorkspace({
                   key={selectedFile.id}
                   fileId={selectedFile.id}
                   value={selectedFile.content}
-                  language={selectedFile.language}
+                  language={selectedFile.language} 
                 />
               </div>
             </div>
