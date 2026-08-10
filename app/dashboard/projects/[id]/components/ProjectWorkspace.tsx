@@ -13,7 +13,7 @@ type FileType = {
 };
 
 type FolderType = {
-  id: string;
+  id: string; 
   name: string;
 };
 
@@ -34,6 +34,7 @@ export default function ProjectWorkspace({
   const [openFiles, setOpenFiles] =
     useState<FileType[]>([]);
 
+  // Open a file
   function openFile(file: FileType) {
     const alreadyOpen = openFiles.some(
       (item) => item.id === file.id
@@ -46,6 +47,7 @@ export default function ProjectWorkspace({
     setSelectedFile(file);
   }
 
+  // Select a tab
   function selectTab(id: string) {
     const file = openFiles.find(
       (item) => item.id === id
@@ -56,6 +58,7 @@ export default function ProjectWorkspace({
     }
   }
 
+  // Close a tab
   function closeTab(id: string) {
     const index = openFiles.findIndex(
       (file) => file.id === id
@@ -81,8 +84,37 @@ export default function ProjectWorkspace({
     }
   }
 
+  // Rename a file
+  function handleFileRenamed(
+    fileId: string,
+    newName: string
+  ) {
+    // Update open tabs
+    setOpenFiles((prev) =>
+      prev.map((file) =>
+        file.id === fileId
+          ? {
+              ...file,
+              name: newName,
+            }
+          : file
+      )
+    );
+
+    // Update currently selected file
+    setSelectedFile((prev) =>
+      prev?.id === fileId
+        ? {
+            ...prev,
+            name: newName,
+          }
+        : prev
+    );
+  }
+
   return (
-    <div className="flex min-h-125 w-full overflow-hidden rounded-xl border bg-white shadow">
+    <div className="flex h-full min-h-150 w-full">
+
       {/* File Explorer */}
 
       <div className="w-64 shrink-0 border-r bg-gray-50">
@@ -92,12 +124,14 @@ export default function ProjectWorkspace({
           projectId={projectId}
           activeFileId={selectedFile?.id}
           onFileSelect={openFile}
+          onFileRenamed={handleFileRenamed}
         />
       </div>
 
       {/* Editor Area */}
 
       <div className="flex min-w-0 flex-1 flex-col">
+
         {/* Tabs */}
 
         <Tabs
@@ -113,15 +147,21 @@ export default function ProjectWorkspace({
         {/* Editor */}
 
         <div className="min-h-0 flex-1">
+
           {!selectedFile ? (
+
             <div className="flex h-full min-h-125 items-center justify-center text-gray-500">
               Select a file from the Explorer
             </div>
+
           ) : (
+
             <div className="flex h-full flex-col">
+
               {/* File Information */}
 
               <div className="border-b bg-white px-4 py-3">
+
                 <h2 className="font-semibold">
                   {selectedFile.name}
                 </h2>
@@ -129,22 +169,30 @@ export default function ProjectWorkspace({
                 <p className="text-sm text-gray-500">
                   {selectedFile.language}
                 </p>
+
               </div>
 
               {/* Monaco Editor */}
 
               <div className="min-h-0 flex-1">
+
                 <MonacoEditor
                   key={selectedFile.id}
                   fileId={selectedFile.id}
                   value={selectedFile.content}
-                  language={selectedFile.language} 
+                  language={selectedFile.language}
                 />
+
               </div>
-            </div> 
+
+            </div>
+
           )}
+
         </div>
+
       </div>
+
     </div>
   );
 }
