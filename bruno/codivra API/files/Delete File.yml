@@ -1,17 +1,16 @@
 info:
-  name: update file
+  name: Delete File
   type: http
-  seq: 4
+  seq: 5
 
 http:
-  method: PATCH
+  method: DELETE
   url: http://localhost:3000/api/projects/cmsfosdm80001fnukrcxnxdbx/files
   body:
     type: json
     data: |-
       {
-        "fileId": "cmsg5nlat0003fnjc75gu1r6g",
-        "name": "main.ts"
+        "fileId": "cmsg4wl2u0001fnjcqbs4oyqx"
       }
   auth: inherit
 

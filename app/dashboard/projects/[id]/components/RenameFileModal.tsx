@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 type Props = {
+  projectId: string;
   fileId: string;
   currentName: string;
   onClose: () => void;
@@ -10,6 +11,7 @@ type Props = {
 };
 
 export default function RenameFileModal({
+  projectId,
   fileId,
   currentName,
   onClose,
@@ -40,15 +42,19 @@ export default function RenameFileModal({
       setLoading(true);
       setError("");
 
-      const response = await fetch(`/api/files/${fileId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: trimmedName,
-        }),
-      });
+      const response = await fetch(
+        `/api/projects/${projectId}/files`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            fileId,
+            name: trimmedName,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -58,9 +64,17 @@ export default function RenameFileModal({
         );
       }
 
+      console.log("File renamed successfully:", data);
+
+      // Update Explorer / Tabs
       onRenamed(trimmedName);
+
+      // Close modal
       onClose();
+
     } catch (error) {
+      console.error("Rename error:", error);
+
       setError(
         error instanceof Error
           ? error.message
@@ -73,9 +87,13 @@ export default function RenameFileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
       <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
 
+        {/* Header */}
+
         <div className="mb-5 flex items-center justify-between">
+
           <h2 className="text-xl font-bold text-gray-900">
             Rename File
           </h2>
@@ -87,7 +105,10 @@ export default function RenameFileModal({
           >
             ×
           </button>
+
         </div>
+
+        {/* Form */}
 
         <form onSubmit={handleRename}>
 
@@ -99,9 +120,12 @@ export default function RenameFileModal({
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
+            disabled={loading}
+            className="w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500 disabled:bg-gray-100"
             placeholder="example.ts"
           />
+
+          {/* Error */}
 
           {error && (
             <p className="mt-2 text-sm text-red-600">
@@ -109,13 +133,15 @@ export default function RenameFileModal({
             </p>
           )}
 
+          {/* Buttons */}
+
           <div className="mt-6 flex justify-end gap-3">
 
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="rounded-lg border px-4 py-2 text-gray-700 hover:bg-gray-100"
+              className="rounded-lg border px-4 py-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
             >
               Cancel
             </button>
@@ -133,6 +159,7 @@ export default function RenameFileModal({
         </form>
 
       </div>
+
     </div>
   );
 }

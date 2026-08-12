@@ -13,7 +13,7 @@ type FileType = {
 };
 
 type FolderType = {
-  id: string; 
+  id: string;
   name: string;
 };
 
@@ -41,7 +41,10 @@ export default function ProjectWorkspace({
     );
 
     if (!alreadyOpen) {
-      setOpenFiles((prev) => [...prev, file]);
+      setOpenFiles((prev) => [
+        ...prev,
+        file,
+      ]);
     }
 
     setSelectedFile(file);
@@ -68,9 +71,10 @@ export default function ProjectWorkspace({
       return;
     }
 
-    const updatedFiles = openFiles.filter(
-      (file) => file.id !== id
-    );
+    const updatedFiles =
+      openFiles.filter(
+        (file) => file.id !== id
+      );
 
     setOpenFiles(updatedFiles);
 
@@ -112,12 +116,40 @@ export default function ProjectWorkspace({
     );
   }
 
+  // Delete a file
+  function handleFileDeleted(
+    fileId: string
+  ) {
+    const index = openFiles.findIndex(
+      (file) => file.id === fileId
+    );
+
+    // Remove deleted file from open tabs
+    const updatedFiles =
+      openFiles.filter(
+        (file) => file.id !== fileId
+      );
+
+    setOpenFiles(updatedFiles);
+
+    // If deleted file was currently selected
+    if (selectedFile?.id === fileId) {
+      const nextFile =
+        updatedFiles[index] ??
+        updatedFiles[index - 1] ??
+        null;
+
+      setSelectedFile(nextFile);
+    }
+  }
+
   return (
     <div className="flex h-full min-h-150 w-full">
 
       {/* File Explorer */}
 
       <div className="w-64 shrink-0 border-r bg-gray-50">
+
         <FileExplorer
           files={files}
           folders={folders}
@@ -125,7 +157,9 @@ export default function ProjectWorkspace({
           activeFileId={selectedFile?.id}
           onFileSelect={openFile}
           onFileRenamed={handleFileRenamed}
+          onFileDeleted={handleFileDeleted}
         />
+
       </div>
 
       {/* Editor Area */}
@@ -135,11 +169,15 @@ export default function ProjectWorkspace({
         {/* Tabs */}
 
         <Tabs
-          files={openFiles.map((file) => ({
-            id: file.id,
-            name: file.name,
-          }))}
-          activeId={selectedFile?.id ?? ""}
+          files={openFiles.map(
+            (file) => ({
+              id: file.id,
+              name: file.name,
+            })
+          )}
+          activeId={
+            selectedFile?.id ?? ""
+          }
           onSelect={selectTab}
           onClose={closeTab}
         />
