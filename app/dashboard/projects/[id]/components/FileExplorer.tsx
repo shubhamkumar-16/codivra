@@ -21,13 +21,26 @@ type Props = {
   folders: Folder[];
   projectId: string;
   activeFileId?: string;
-  onFileSelect?: (file: FileType) => void;
+
+  onFileSelect?: (
+    file: FileType
+  ) => void;
 
   // Called after a file has been successfully renamed
-  onFileRenamed?: (fileId: string, newName: string) => void;
+  onFileRenamed?: (
+    fileId: string,
+    newName: string
+  ) => void;
 
   // Called after a file has been successfully deleted
-  onFileDeleted?: (fileId: string) => void;
+  onFileDeleted?: (
+    fileId: string
+  ) => void;
+
+  // Called after a file has been successfully created
+  onFileCreated?: (
+    file: FileType
+  ) => void;
 };
 
 export default function FileExplorer({
@@ -38,6 +51,7 @@ export default function FileExplorer({
   onFileSelect,
   onFileRenamed,
   onFileDeleted,
+  onFileCreated,
 }: Props) {
   const [renameFile, setRenameFile] =
     useState<FileType | null>(null);
@@ -45,7 +59,13 @@ export default function FileExplorer({
   const [deletingFileId, setDeletingFileId] =
     useState<string | null>(null);
 
-  async function handleDeleteFile(file: FileType) {
+  // =========================
+  // Delete File
+  // =========================
+
+  async function handleDeleteFile(
+    file: FileType
+  ) {
     const confirmed = window.confirm(
       `Are you sure you want to delete "${file.name}"?`
     );
@@ -74,11 +94,12 @@ export default function FileExplorer({
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Failed to delete file"
+          data.error ||
+            "Failed to delete file"
         );
       }
 
-      // Tell ProjectWorkspace that the file was deleted
+      // Tell ProjectWorkspace
       onFileDeleted?.(file.id);
 
     } catch (error) {
@@ -87,18 +108,32 @@ export default function FileExplorer({
       if (error instanceof Error) {
         window.alert(error.message);
       } else {
-        window.alert("Failed to delete file");
+        window.alert(
+          "Failed to delete file"
+        );
       }
     } finally {
       setDeletingFileId(null);
     }
   }
 
+  // =========================
+  // File Created
+  // =========================
+
+  function handleFileCreated(
+    file: FileType
+  ) {
+    onFileCreated?.(file);
+  }
+
   return (
     <>
       <aside className="w-full rounded-xl bg-white shadow">
 
-        {/* Header */}
+        {/* =========================
+            Header
+        ========================= */}
 
         <div className="flex items-center justify-between border-b px-4 py-4">
 
@@ -106,19 +141,27 @@ export default function FileExplorer({
             Explorer
           </h2>
 
-          <CreateFileButton projectId={projectId} />
+          <CreateFileButton
+            projectId={projectId}
+            onFileCreated={handleFileCreated}
+          />
 
         </div>
 
-        {/* Empty State */}
+        {/* =========================
+            Empty State
+        ========================= */}
 
-        {folders.length === 0 && files.length === 0 && (
-          <p className="px-4 py-4 text-sm text-gray-500">
-            No files yet
-          </p>
-        )}
+        {folders.length === 0 &&
+          files.length === 0 && (
+            <p className="px-4 py-4 text-sm text-gray-500">
+              No files yet
+            </p>
+          )}
 
-        {/* Folder List */}
+        {/* =========================
+            Folder List
+        ========================= */}
 
         {folders.map((folder) => (
           <div
@@ -129,7 +172,9 @@ export default function FileExplorer({
           </div>
         ))}
 
-        {/* File List */}
+        {/* =========================
+            File List
+        ========================= */}
 
         <div className="p-2">
 
@@ -154,7 +199,9 @@ export default function FileExplorer({
 
                 <button
                   type="button"
-                  onClick={() => onFileSelect?.(file)}
+                  onClick={() =>
+                    onFileSelect?.(file)
+                  }
                   disabled={isDeleting}
                   className={`flex min-w-0 flex-1 items-center px-2 py-2 text-left text-sm ${
                     isActive
@@ -198,7 +245,9 @@ export default function FileExplorer({
                   className="mr-2 rounded px-2 py-1 text-red-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                   title="Delete file"
                 >
-                  {isDeleting ? "..." : "🗑"}
+                  {isDeleting
+                    ? "..."
+                    : "🗑"}
                 </button>
 
               </div>
@@ -209,15 +258,20 @@ export default function FileExplorer({
 
       </aside>
 
-      {/* Rename Modal */}
+      {/* =========================
+          Rename Modal
+      ========================= */}
 
       {renameFile && (
         <RenameFileModal
           projectId={projectId}
           fileId={renameFile.id}
           currentName={renameFile.name}
-          onClose={() => setRenameFile(null)}
+          onClose={() =>
+            setRenameFile(null)
+          }
           onRenamed={(newName) => {
+
             onFileRenamed?.(
               renameFile.id,
               newName

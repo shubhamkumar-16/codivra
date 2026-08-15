@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-// =========================
-// Create File
+// =====================================================
 // POST /api/projects/[id]/files
-// =========================
+// Create File
+// =====================================================
 
 export async function POST(
   req: Request,
@@ -20,10 +20,27 @@ export async function POST(
     if (!name || !language) {
       return NextResponse.json(
         {
-          error: "Name and language required",
+          error: "Name and language are required",
         },
         {
           status: 400,
+        }
+      );
+    }
+
+    const project = await prisma.project.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        {
+          error: "Project not found",
+        },
+        {
+          status: 404,
         }
       );
     }
@@ -32,8 +49,8 @@ export async function POST(
       data: {
         name,
         language,
-        projectId: id,
         content: "",
+        projectId: id,
       },
     });
 
@@ -41,7 +58,7 @@ export async function POST(
       status: 201,
     });
   } catch (error) {
-    console.error(error);
+    console.error("CREATE FILE ERROR:", error);
 
     return NextResponse.json(
       {
@@ -54,10 +71,10 @@ export async function POST(
   }
 }
 
-// =========================
-// Get All Files
+// =====================================================
 // GET /api/projects/[id]/files
-// =========================
+// Get All Files
+// =====================================================
 
 export async function GET(
   req: Request,
@@ -77,7 +94,7 @@ export async function GET(
 
     return NextResponse.json(files);
   } catch (error) {
-    console.error(error);
+    console.error("GET FILES ERROR:", error);
 
     return NextResponse.json(
       {
@@ -90,10 +107,10 @@ export async function GET(
   }
 }
 
-// =========================
-// Rename File
+// =====================================================
 // PATCH /api/projects/[id]/files
-// =========================
+// Update File
+// =====================================================
 
 export async function PATCH(
   req: Request,
@@ -104,13 +121,12 @@ export async function PATCH(
 
     const body = await req.json();
 
-    const { fileId, name } = body;
+    const { fileId, name, content } = body;
 
-    // Validate request
-    if (!fileId || !name) {
+    if (!fileId) {
       return NextResponse.json(
         {
-          error: "File ID and name are required",
+          error: "fileId is required",
         },
         {
           status: 400,
@@ -118,21 +134,6 @@ export async function PATCH(
       );
     }
 
-    // Make sure the name isn't just spaces
-    const trimmedName = name.trim();
-
-    if (!trimmedName) {
-      return NextResponse.json(
-        {
-          error: "File name cannot be empty",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    // Make sure the file belongs to this project
     const existingFile = await prisma.file.findFirst({
       where: {
         id: fileId,
@@ -151,23 +152,28 @@ export async function PATCH(
       );
     }
 
-    // Update file name
-    const updatedFile = await prisma.file.update({
+    const file = await prisma.file.update({
       where: {
         id: fileId,
       },
       data: {
-        name: trimmedName,
+        ...(name !== undefined && {
+          name,
+        }),
+
+        ...(content !== undefined && {
+          content,
+        }),
       },
     });
 
-    return NextResponse.json(updatedFile);
+    return NextResponse.json(file);
   } catch (error) {
-    console.error(error);
+    console.error("UPDATE FILE ERROR:", error);
 
     return NextResponse.json(
       {
-        error: "Failed to rename file",
+        error: "Failed to update file",
       },
       {
         status: 500,
@@ -176,10 +182,10 @@ export async function PATCH(
   }
 }
 
-// =========================
-// DELETE File
+// =====================================================
 // DELETE /api/projects/[id]/files
-// =========================
+// Delete File
+// =====================================================
 
 export async function DELETE(
   req: Request,
@@ -195,7 +201,7 @@ export async function DELETE(
     if (!fileId) {
       return NextResponse.json(
         {
-          error: "File ID is required",
+          error: "fileId is required",
         },
         {
           status: 400,
@@ -203,15 +209,14 @@ export async function DELETE(
       );
     }
 
-    // Make sure the file belongs to this project
-    const file = await prisma.file.findFirst({
+    const existingFile = await prisma.file.findFirst({
       where: {
         id: fileId,
         projectId: id,
       },
     });
 
-    if (!file) {
+    if (!existingFile) {
       return NextResponse.json(
         {
           error: "File not found",
@@ -229,12 +234,11 @@ export async function DELETE(
     });
 
     return NextResponse.json({
+      success: true,
       message: "File deleted successfully",
-      fileId,
     });
-
   } catch (error) {
-    console.error("Delete file error:", error);
+    console.error("DELETE FILE ERROR:", error);
 
     return NextResponse.json(
       {

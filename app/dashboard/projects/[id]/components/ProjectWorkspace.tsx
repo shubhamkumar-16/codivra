@@ -28,13 +28,21 @@ export default function ProjectWorkspace({
   folders = [],
   projectId = "",
 }: Props) {
+  // Files displayed in Explorer.
+  // Start with the files received from the server.
+  const [explorerFiles, setExplorerFiles] =
+    useState<FileType[]>(files);
+
   const [selectedFile, setSelectedFile] =
     useState<FileType | null>(null);
 
   const [openFiles, setOpenFiles] =
     useState<FileType[]>([]);
 
-  // Open a file
+  // =========================
+  // Open File
+  // =========================
+
   function openFile(file: FileType) {
     const alreadyOpen = openFiles.some(
       (item) => item.id === file.id
@@ -50,7 +58,10 @@ export default function ProjectWorkspace({
     setSelectedFile(file);
   }
 
-  // Select a tab
+  // =========================
+  // Select Tab
+  // =========================
+
   function selectTab(id: string) {
     const file = openFiles.find(
       (item) => item.id === id
@@ -61,7 +72,10 @@ export default function ProjectWorkspace({
     }
   }
 
-  // Close a tab
+  // =========================
+  // Close Tab
+  // =========================
+
   function closeTab(id: string) {
     const index = openFiles.findIndex(
       (file) => file.id === id
@@ -71,10 +85,9 @@ export default function ProjectWorkspace({
       return;
     }
 
-    const updatedFiles =
-      openFiles.filter(
-        (file) => file.id !== id
-      );
+    const updatedFiles = openFiles.filter(
+      (file) => file.id !== id
+    );
 
     setOpenFiles(updatedFiles);
 
@@ -88,11 +101,26 @@ export default function ProjectWorkspace({
     }
   }
 
-  // Rename a file
+  // =========================
+  // File Renamed
+  // =========================
+
   function handleFileRenamed(
     fileId: string,
     newName: string
   ) {
+    // Update Explorer
+    setExplorerFiles((prev) =>
+      prev.map((file) =>
+        file.id === fileId
+          ? {
+              ...file,
+              name: newName,
+            }
+          : file
+      )
+    );
+
     // Update open tabs
     setOpenFiles((prev) =>
       prev.map((file) =>
@@ -116,7 +144,10 @@ export default function ProjectWorkspace({
     );
   }
 
-  // Delete a file
+  // =========================
+  // File Deleted
+  // =========================
+
   function handleFileDeleted(
     fileId: string
   ) {
@@ -124,7 +155,14 @@ export default function ProjectWorkspace({
       (file) => file.id === fileId
     );
 
-    // Remove deleted file from open tabs
+    // Remove from Explorer
+    setExplorerFiles((prev) =>
+      prev.filter(
+        (file) => file.id !== fileId
+      )
+    );
+
+    // Remove from open tabs
     const updatedFiles =
       openFiles.filter(
         (file) => file.id !== fileId
@@ -132,7 +170,7 @@ export default function ProjectWorkspace({
 
     setOpenFiles(updatedFiles);
 
-    // If deleted file was currently selected
+    // If deleted file was selected
     if (selectedFile?.id === fileId) {
       const nextFile =
         updatedFiles[index] ??
@@ -143,30 +181,58 @@ export default function ProjectWorkspace({
     }
   }
 
+  // =========================
+  // File Created
+  // =========================
+
+  function handleFileCreated(
+    newFile: FileType
+  ) {
+    setExplorerFiles((prev) => {
+      // Prevent duplicates
+      const alreadyExists = prev.some(
+        (file) => file.id === newFile.id
+      );
+
+      if (alreadyExists) {
+        return prev;
+      }
+
+      return [...prev, newFile];
+    });
+  }
+
   return (
     <div className="flex h-full min-h-150 w-full">
 
-      {/* File Explorer */}
+      {/* =========================
+          File Explorer
+      ========================= */}
 
       <div className="w-64 shrink-0 border-r bg-gray-50">
 
         <FileExplorer
-          files={files}
+          files={explorerFiles}
           folders={folders}
           projectId={projectId}
           activeFileId={selectedFile?.id}
           onFileSelect={openFile}
           onFileRenamed={handleFileRenamed}
           onFileDeleted={handleFileDeleted}
+          onFileCreated={handleFileCreated}
         />
 
       </div>
 
-      {/* Editor Area */}
+      {/* =========================
+          Editor Area
+      ========================= */}
 
       <div className="flex min-w-0 flex-1 flex-col">
 
-        {/* Tabs */}
+        {/* =========================
+            Tabs
+        ========================= */}
 
         <Tabs
           files={openFiles.map(
@@ -182,7 +248,9 @@ export default function ProjectWorkspace({
           onClose={closeTab}
         />
 
-        {/* Editor */}
+        {/* =========================
+            Editor
+        ========================= */}
 
         <div className="min-h-0 flex-1">
 
