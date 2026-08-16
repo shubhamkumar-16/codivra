@@ -7,25 +7,50 @@ type FileType = {
   name: string;
   language: string;
   content: string;
+  folderId?: string | null;
+};
+
+type FolderType = {
+  id: string;
+  name: string;
 };
 
 type Props = {
   projectId: string;
   onClose: () => void;
   onFileCreated?: (file: FileType) => void;
+
+  // Folders available in the current project
+  folders?: FolderType[];
 };
 
 export default function CreateFileModal({
   projectId,
   onClose,
   onFileCreated,
+  folders = [],
 }: Props) {
   const [name, setName] = useState("");
-  const [language, setLanguage] = useState("typescript");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [language, setLanguage] =
+    useState("typescript");
 
-  async function handleSubmit(e: React.FormEvent) {
+  // null = project root
+  const [folderId, setFolderId] =
+    useState<string | null>(null);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  // =========================
+  // Create File
+  // =========================
+
+  async function handleSubmit(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
 
     const trimmedName = name.trim();
@@ -43,17 +68,23 @@ export default function CreateFileModal({
       console.log("Project ID:", projectId);
       console.log("File name:", trimmedName);
       console.log("Language:", language);
+      console.log("Folder ID:", folderId);
 
       const res = await fetch(
         `/api/projects/${projectId}/files`,
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
             name: trimmedName,
             language,
+
+            // null means project root
+            folderId,
           }),
         }
       );
@@ -62,13 +93,18 @@ export default function CreateFileModal({
        * Read response as text first.
        *
        * This prevents:
-       * Unexpected token '<', "<!DOCTYPE..."
+       * Unexpected token '<'
        *
        * if Next.js returns an HTML error page.
        */
-      const responseText = await res.text();
 
-      let data: FileType | { error?: string } | null = null;
+      const responseText =
+        await res.text();
+
+      let data:
+        | FileType
+        | { error?: string }
+        | null = null;
 
       try {
         data = responseText
@@ -85,6 +121,10 @@ export default function CreateFileModal({
         );
       }
 
+      // =========================
+      // API Error
+      // =========================
+
       if (!res.ok) {
         const errorMessage =
           data &&
@@ -97,9 +137,10 @@ export default function CreateFileModal({
         throw new Error(errorMessage);
       }
 
-      /*
-       * Make sure we actually received a file
-       */
+      // =========================
+      // Validate response
+      // =========================
+
       if (
         !data ||
         typeof data !== "object" ||
@@ -110,23 +151,40 @@ export default function CreateFileModal({
         );
       }
 
-      const createdFile = data as FileType;
+      const createdFile =
+        data as FileType;
 
-      console.log("File created successfully:", createdFile);
+      console.log(
+        "File created successfully:",
+        createdFile
+      );
 
-      // Send newly created file to parent
+      // =========================
+      // Send file to parent
+      // =========================
+
       onFileCreated?.(createdFile);
 
+      // =========================
       // Close modal
+      // =========================
+
       onClose();
+
     } catch (err) {
-      console.error("CREATE FILE ERROR:", err);
+      console.error(
+        "CREATE FILE ERROR:",
+        err
+      );
 
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError("Failed to create file");
+        setError(
+          "Failed to create file"
+        );
       }
+
     } finally {
       setLoading(false);
     }
@@ -134,11 +192,15 @@ export default function CreateFileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+
       <div className="w-full max-w-md rounded-xl bg-white p-6">
 
-        {/* Header */}
+        {/* =========================
+            Header
+        ========================= */}
 
         <div className="mb-5 flex items-center justify-between">
+
           <h2 className="text-2xl font-bold text-black">
             Create File
           </h2>
@@ -150,13 +212,18 @@ export default function CreateFileModal({
           >
             ✕
           </button>
+
         </div>
 
-        {/* Form */}
+        {/* =========================
+            Form
+        ========================= */}
 
         <form onSubmit={handleSubmit}>
 
-          {/* File Name */}
+          {/* =========================
+              File Name
+          ========================= */}
 
           <label className="mb-1 block text-sm font-medium text-gray-700">
             File Name
@@ -166,11 +233,15 @@ export default function CreateFileModal({
             className="mb-4 w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
             placeholder="app.ts"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) =>
+              setName(e.target.value)
+            }
             required
           />
 
-          {/* Language */}
+          {/* =========================
+              Language
+          ========================= */}
 
           <label className="mb-1 block text-sm font-medium text-gray-700">
             Language
@@ -179,8 +250,11 @@ export default function CreateFileModal({
           <select
             className="mb-4 w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
             value={language}
-            onChange={(e) => setLanguage(e.target.value)}
+            onChange={(e) =>
+              setLanguage(e.target.value)
+            }
           >
+
             <option value="typescript">
               TypeScript
             </option>
@@ -200,19 +274,77 @@ export default function CreateFileModal({
             <option value="cpp">
               C++
             </option>
+
           </select>
 
-          {/* Error */}
+          {/* =========================
+              Folder
+          ========================= */}
+
+          <label className="mb-1 block text-sm font-medium text-gray-700">
+            Folder
+          </label>
+
+          <select
+            className="mb-4 w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
+            value={folderId ?? ""}
+            onChange={(e) => {
+              const value = e.target.value;
+
+              setFolderId(
+                value === ""
+                  ? null
+                  : value
+              );
+            }}
+          >
+
+            {/* Project Root */}
+
+            <option value="">
+              Project Root
+            </option>
+
+            {/* Folders */}
+
+            {folders.map((folder) => (
+              <option
+                key={folder.id}
+                value={folder.id}
+              >
+                📁 {folder.name}
+              </option>
+            ))}
+
+          </select>
+
+          {/* =========================
+              Folder information
+          ========================= */}
+
+          {folders.length === 0 && (
+            <p className="mb-4 text-xs text-gray-500">
+              No folders available. The file will be created in the project root.
+            </p>
+          )}
+
+          {/* =========================
+              Error
+          ========================= */}
 
           {error && (
             <div className="mb-3 rounded-lg bg-red-50 px-3 py-2">
+
               <p className="text-sm text-red-600">
                 {error}
               </p>
+
             </div>
           )}
 
-          {/* Create */}
+          {/* =========================
+              Create
+          ========================= */}
 
           <button
             type="submit"
@@ -225,7 +357,9 @@ export default function CreateFileModal({
           </button>
 
         </form>
+
       </div>
+
     </div>
   );
 }
