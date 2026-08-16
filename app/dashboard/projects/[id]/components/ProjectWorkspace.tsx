@@ -28,13 +28,30 @@ export default function ProjectWorkspace({
   folders = [],
   projectId = "",
 }: Props) {
-  // Files displayed in Explorer.
-  // Start with the files received from the server.
+  // =========================
+  // Explorer Files
+  // =========================
+
   const [explorerFiles, setExplorerFiles] =
     useState<FileType[]>(files);
 
+  // =========================
+  // Explorer Folders
+  // =========================
+
+  const [explorerFolders, setExplorerFolders] =
+    useState<FolderType[]>(folders);
+
+  // =========================
+  // Selected File
+  // =========================
+
   const [selectedFile, setSelectedFile] =
     useState<FileType | null>(null);
+
+  // =========================
+  // Open Tabs
+  // =========================
 
   const [openFiles, setOpenFiles] =
     useState<FileType[]>([]);
@@ -133,7 +150,7 @@ export default function ProjectWorkspace({
       )
     );
 
-    // Update currently selected file
+    // Update selected file
     setSelectedFile((prev) =>
       prev?.id === fileId
         ? {
@@ -162,7 +179,7 @@ export default function ProjectWorkspace({
       )
     );
 
-    // Remove from open tabs
+    // Remove from tabs
     const updatedFiles =
       openFiles.filter(
         (file) => file.id !== fileId
@@ -189,7 +206,6 @@ export default function ProjectWorkspace({
     newFile: FileType
   ) {
     setExplorerFiles((prev) => {
-      // Prevent duplicates
       const alreadyExists = prev.some(
         (file) => file.id === newFile.id
       );
@@ -199,6 +215,28 @@ export default function ProjectWorkspace({
       }
 
       return [...prev, newFile];
+    });
+  }
+
+  // =========================
+  // Folder Created
+  // =========================
+
+  function handleFolderCreated(
+    newFolder: FolderType
+  ) {
+    setExplorerFolders((prev) => {
+      // Prevent duplicate folders
+      const alreadyExists = prev.some(
+        (folder) =>
+          folder.id === newFolder.id
+      );
+
+      if (alreadyExists) {
+        return prev;
+      }
+
+      return [...prev, newFolder];
     });
   }
 
@@ -213,13 +251,27 @@ export default function ProjectWorkspace({
 
         <FileExplorer
           files={explorerFiles}
-          folders={folders}
+          folders={explorerFolders}
           projectId={projectId}
           activeFileId={selectedFile?.id}
+
           onFileSelect={openFile}
-          onFileRenamed={handleFileRenamed}
-          onFileDeleted={handleFileDeleted}
-          onFileCreated={handleFileCreated}
+
+          onFileRenamed={
+            handleFileRenamed
+          }
+
+          onFileDeleted={
+            handleFileDeleted
+          }
+
+          onFileCreated={
+            handleFileCreated
+          }
+
+          onFolderCreated={
+            handleFolderCreated
+          }
         />
 
       </div>
@@ -241,9 +293,11 @@ export default function ProjectWorkspace({
               name: file.name,
             })
           )}
+
           activeId={
             selectedFile?.id ?? ""
           }
+
           onSelect={selectTab}
           onClose={closeTab}
         />
@@ -286,7 +340,9 @@ export default function ProjectWorkspace({
                   key={selectedFile.id}
                   fileId={selectedFile.id}
                   value={selectedFile.content}
-                  language={selectedFile.language}
+                  language={
+                    selectedFile.language
+                  }
                 />
 
               </div>

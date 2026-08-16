@@ -2,9 +2,16 @@
 
 import { useState } from "react";
 
+type Folder = {
+  id: string;
+  name: string;
+};
+
 type Props = {
   projectId: string;
-  onCreated?: () => void;
+
+  // Called after folder is successfully created
+  onCreated?: (folder: Folder) => void;
 };
 
 export default function CreateFolderButton({
@@ -16,7 +23,9 @@ export default function CreateFolderButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleCreateFolder(
+    e: React.FormEvent
+  ) {
     e.preventDefault();
 
     const trimmedName = name.trim();
@@ -47,18 +56,18 @@ export default function CreateFolderButton({
 
       if (!response.ok) {
         throw new Error(
-          data.error || "Failed to create folder"
+          data.error ||
+            "Failed to create folder"
         );
       }
 
-      // Clear input
+      // Send newly created folder
+      // back to FileExplorer
+      onCreated?.(data);
+
+      // Reset form
       setName("");
-
-      // Close modal
       setOpen(false);
-
-      // Tell parent that folder was created
-      onCreated?.();
 
     } catch (error) {
       console.error(error);
@@ -66,7 +75,9 @@ export default function CreateFolderButton({
       if (error instanceof Error) {
         setError(error.message);
       } else {
-        setError("Failed to create folder");
+        setError(
+          "Failed to create folder"
+        );
       }
     } finally {
       setLoading(false);
@@ -80,10 +91,10 @@ export default function CreateFolderButton({
       <button
         type="button"
         onClick={() => {
-          setOpen(true);
           setError("");
+          setOpen(true);
         }}
-        className="rounded px-2 py-1 text-sm text-gray-500 hover:bg-gray-200 hover:text-gray-800"
+        className="rounded px-2 py-1 text-gray-500 transition hover:bg-gray-200 hover:text-gray-900"
         title="Create folder"
       >
         📁+
@@ -107,7 +118,7 @@ export default function CreateFolderButton({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="text-gray-500 hover:text-gray-900"
+                className="text-gray-400 hover:text-gray-900"
               >
                 ✕
               </button>
@@ -116,7 +127,9 @@ export default function CreateFolderButton({
 
             {/* Form */}
 
-            <form onSubmit={handleSubmit}>
+            <form
+              onSubmit={handleCreateFolder}
+            >
 
               <label className="mb-2 block text-sm font-medium text-gray-700">
                 Folder Name
@@ -128,9 +141,9 @@ export default function CreateFolderButton({
                 onChange={(e) =>
                   setName(e.target.value)
                 }
-                placeholder="src"
+                placeholder="components"
                 autoFocus
-                className="w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-black outline-none focus:border-blue-500"
               />
 
               {/* Error */}
@@ -143,15 +156,13 @@ export default function CreateFolderButton({
 
               {/* Buttons */}
 
-              <div className="mt-5 flex gap-3">
+              <div className="mt-6 flex justify-end gap-3">
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setOpen(false);
-                    setError("");
-                  }}
-                  className="flex-1 rounded-lg border px-4 py-2 font-medium text-gray-700 hover:bg-gray-100"
+                  onClick={() => setOpen(false)}
+                  disabled={loading}
+                  className="rounded-lg border border-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -159,7 +170,7 @@ export default function CreateFolderButton({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading
                     ? "Creating..."
