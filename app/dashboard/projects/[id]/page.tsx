@@ -9,9 +9,7 @@ type Props = {
 };
 
 export default async function ProjectPage({ params }: Props) {
-
   const { id } = await params;
-
 
   const project = await prisma.project.findUnique({
     where: {
@@ -20,40 +18,35 @@ export default async function ProjectPage({ params }: Props) {
 
     include: {
       files: true,
-      folders: true, 
+      folders: true,
     },
-  }); 
-
+  });
 
   if (!project) {
     notFound();
   }
 
-
   return (
     <main className="min-h-screen bg-gray-100 p-8">
-
       <div className="mx-auto max-w-7xl">
 
-
-        {/* Project Header */}
+        {/* =========================
+            Project Header
+        ========================= */}
 
         <div className="mb-8">
-
           <h1 className="text-4xl font-bold">
             {project.name}
           </h1>
 
-
           <p className="mt-3 text-gray-600">
             {project.description || "No description"}
           </p>
-
         </div>
 
-
-
-        {/* Project Info */}
+        {/* =========================
+            Project Info
+        ========================= */}
 
         <div className="rounded-xl bg-white p-6 shadow">
 
@@ -62,36 +55,33 @@ export default async function ProjectPage({ params }: Props) {
             {project.language}
           </p>
 
-
           <p className="mt-3">
             <strong>Visibility:</strong>{" "}
             {project.visibility}
           </p>
 
-
           <p className="mt-3 text-sm text-gray-500">
-            Created: {project.createdAt.toDateString()}
+            Created:{" "}
+            {project.createdAt.toDateString()}
           </p>
 
         </div>
 
-
-
-
-        {/* Workspace */}
+        {/* =========================
+            Project Workspace
+        ========================= */}
 
         <div className="mt-8 flex min-h-125 overflow-hidden rounded-xl bg-white shadow">
 
           <ProjectWorkspace
             files={project.files}
+            folders={project.folders}
+            projectId={project.id}
           />
 
         </div>
 
-
       </div>
-
-
     </main>
   );
 }

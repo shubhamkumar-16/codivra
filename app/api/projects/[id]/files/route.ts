@@ -11,7 +11,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: projectId } = await params;
 
     const body = await req.json();
 
@@ -30,7 +30,7 @@ export async function POST(
 
     const project = await prisma.project.findUnique({
       where: {
-        id,
+        id: projectId,
       },
     });
 
@@ -50,7 +50,7 @@ export async function POST(
         name,
         language,
         content: "",
-        projectId: id,
+        projectId,
       },
     });
 
@@ -81,18 +81,20 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: projectId } = await params;
 
     const files = await prisma.file.findMany({
       where: {
-        projectId: id,
+        projectId,
       },
       orderBy: {
         createdAt: "asc",
       },
     });
 
-    return NextResponse.json(files);
+    return NextResponse.json(files, {
+      status: 200,
+    });
   } catch (error) {
     console.error("GET FILES ERROR:", error);
 
@@ -109,7 +111,7 @@ export async function GET(
 
 // =====================================================
 // PATCH /api/projects/[id]/files
-// Update File
+// Rename File
 // =====================================================
 
 export async function PATCH(
@@ -117,16 +119,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: projectId } = await params;
 
     const body = await req.json();
 
-    const { fileId, name, content } = body;
+    const { fileId, name } = body;
 
-    if (!fileId) {
+    if (!fileId || !name) {
       return NextResponse.json(
         {
-          error: "fileId is required",
+          error: "fileId and name are required",
         },
         {
           status: 400,
@@ -137,7 +139,7 @@ export async function PATCH(
     const existingFile = await prisma.file.findFirst({
       where: {
         id: fileId,
-        projectId: id,
+        projectId,
       },
     });
 
@@ -152,28 +154,24 @@ export async function PATCH(
       );
     }
 
-    const file = await prisma.file.update({
+    const updatedFile = await prisma.file.update({
       where: {
         id: fileId,
       },
       data: {
-        ...(name !== undefined && {
-          name,
-        }),
-
-        ...(content !== undefined && {
-          content,
-        }),
+        name,
       },
     });
 
-    return NextResponse.json(file);
+    return NextResponse.json(updatedFile, {
+      status: 200,
+    });
   } catch (error) {
-    console.error("UPDATE FILE ERROR:", error);
+    console.error("RENAME FILE ERROR:", error);
 
     return NextResponse.json(
       {
-        error: "Failed to update file",
+        error: "Failed to rename file",
       },
       {
         status: 500,
@@ -192,7 +190,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await params;
+    const { id: projectId } = await params;
 
     const body = await req.json();
 
@@ -209,10 +207,11 @@ export async function DELETE(
       );
     }
 
+    // Make sure the file belongs to this project
     const existingFile = await prisma.file.findFirst({
       where: {
         id: fileId,
-        projectId: id,
+        projectId,
       },
     });
 
@@ -233,10 +232,16 @@ export async function DELETE(
       },
     });
 
-    return NextResponse.json({
-      success: true,
-      message: "File deleted successfully",
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        message: "File deleted successfully",
+        fileId,
+      },
+      {
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error("DELETE FILE ERROR:", error);
 

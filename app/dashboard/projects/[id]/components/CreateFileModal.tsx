@@ -25,15 +25,25 @@ export default function CreateFileModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(
-    e: React.FormEvent
-  ) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+
+    const trimmedName = name.trim();
+
+    if (!trimmedName) {
+      setError("File name is required");
+      return;
+    }
 
     setLoading(true);
     setError("");
 
     try {
+      console.log("Creating file...");
+      console.log("Project ID:", projectId);
+      console.log("File name:", trimmedName);
+      console.log("Language:", language);
+
       const res = await fetch(
         `/api/projects/${projectId}/files`,
         {
@@ -42,27 +52,76 @@ export default function CreateFileModal({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            name,
+            name: trimmedName,
             language,
           }),
         }
       );
 
-      const data = await res.json();
+      /*
+       * Read response as text first.
+       *
+       * This prevents:
+       * Unexpected token '<', "<!DOCTYPE..."
+       *
+       * if Next.js returns an HTML error page.
+       */
+      const responseText = await res.text();
 
-      if (!res.ok) {
+      let data: FileType | { error?: string } | null = null;
+
+      try {
+        data = responseText
+          ? JSON.parse(responseText)
+          : null;
+      } catch {
+        console.error(
+          "API returned non-JSON response:",
+          responseText
+        );
+
         throw new Error(
-          data.error || "Failed to create file"
+          `API returned an invalid response (${res.status}). Check the API route.`
         );
       }
 
+      if (!res.ok) {
+        const errorMessage =
+          data &&
+          typeof data === "object" &&
+          "error" in data &&
+          data.error
+            ? data.error
+            : `Failed to create file (${res.status})`;
+
+        throw new Error(errorMessage);
+      }
+
+      /*
+       * Make sure we actually received a file
+       */
+      if (
+        !data ||
+        typeof data !== "object" ||
+        !("id" in data)
+      ) {
+        throw new Error(
+          "File was created but the API returned an invalid file response."
+        );
+      }
+
+      const createdFile = data as FileType;
+
+      console.log("File created successfully:", createdFile);
+
       // Send newly created file to parent
-      onFileCreated?.(data);
+      onFileCreated?.(createdFile);
 
       // Close modal
       onClose();
-
     } catch (err) {
+      console.error("CREATE FILE ERROR:", err);
+
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -75,13 +134,11 @@ export default function CreateFileModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-
       <div className="w-full max-w-md rounded-xl bg-white p-6">
 
         {/* Header */}
 
         <div className="mb-5 flex items-center justify-between">
-
           <h2 className="text-2xl font-bold text-black">
             Create File
           </h2>
@@ -93,7 +150,6 @@ export default function CreateFileModal({
           >
             ✕
           </button>
-
         </div>
 
         {/* Form */}
@@ -110,9 +166,7 @@ export default function CreateFileModal({
             className="mb-4 w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
             placeholder="app.ts"
             value={name}
-            onChange={(e) =>
-              setName(e.target.value)
-            }
+            onChange={(e) => setName(e.target.value)}
             required
           />
 
@@ -125,9 +179,7 @@ export default function CreateFileModal({
           <select
             className="mb-4 w-full rounded-lg border px-3 py-2 text-black outline-none focus:border-blue-500"
             value={language}
-            onChange={(e) =>
-              setLanguage(e.target.value)
-            }
+            onChange={(e) => setLanguage(e.target.value)}
           >
             <option value="typescript">
               TypeScript
@@ -153,9 +205,11 @@ export default function CreateFileModal({
           {/* Error */}
 
           {error && (
-            <p className="mb-3 text-sm text-red-600">
-              {error}
-            </p>
+            <div className="mb-3 rounded-lg bg-red-50 px-3 py-2">
+              <p className="text-sm text-red-600">
+                {error}
+              </p>
+            </div>
           )}
 
           {/* Create */}
@@ -171,9 +225,7 @@ export default function CreateFileModal({
           </button>
 
         </form>
-
       </div>
-
     </div>
   );
 }

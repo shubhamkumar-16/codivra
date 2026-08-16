@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import CreateFileButton from "./createFilebutton";
-import createfolderbutton from "./createfolderbutton";
+import CreateFolderButton from "./createfolderbutton";
 import RenameFileModal from "./RenameFileModal";
+
 type Folder = {
   id: string;
   name: string;
@@ -141,10 +142,24 @@ export default function FileExplorer({
             Explorer
           </h2>
 
-          <CreateFileButton
-            projectId={projectId}
-            onFileCreated={handleFileCreated}
-          />
+          {/* Create Buttons */}
+
+          <div className="flex items-center gap-1">
+
+            {/* Create Folder */}
+
+            <CreateFolderButton
+              projectId={projectId}
+            />
+
+            {/* Create File */}
+
+            <CreateFileButton
+              projectId={projectId}
+              onFileCreated={handleFileCreated}
+            />
+
+          </div>
 
         </div>
 
