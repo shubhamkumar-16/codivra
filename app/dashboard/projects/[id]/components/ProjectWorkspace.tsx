@@ -10,6 +10,7 @@ type FileType = {
   name: string;
   language: string;
   content: string;
+  folderId?: string | null;
 };
 
 type FolderType = {
@@ -226,7 +227,6 @@ export default function ProjectWorkspace({
     newFolder: FolderType
   ) {
     setExplorerFolders((prev) => {
-      // Prevent duplicate folders
       const alreadyExists = prev.some(
         (folder) =>
           folder.id === newFolder.id
@@ -357,4 +357,4 @@ export default function ProjectWorkspace({
 
     </div>
   );
-} 
+}

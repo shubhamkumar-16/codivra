@@ -15,6 +15,7 @@ type FileType = {
   name: string;
   language: string;
   content: string;
+  folderId?: string | null;
 };
 
 type Props = {
@@ -23,27 +24,21 @@ type Props = {
   projectId: string;
   activeFileId?: string;
 
-  onFileSelect?: (
-    file: FileType
-  ) => void;
+  onFileSelect?: (file: FileType) => void;
 
-  // Called after a file has been successfully renamed
   onFileRenamed?: (
     fileId: string,
     newName: string
   ) => void;
 
-  // Called after a file has been successfully deleted
   onFileDeleted?: (
     fileId: string
   ) => void;
 
-  // Called after a file has been successfully created
   onFileCreated?: (
     file: FileType
   ) => void;
 
-  // Called after a folder has been successfully created
   onFolderCreated?: (
     folder: Folder
   ) => void;
@@ -106,9 +101,7 @@ export default function FileExplorer({
         );
       }
 
-      // Tell ProjectWorkspace
       onFileDeleted?.(file.id);
-
     } catch (error) {
       console.error(error);
 
@@ -144,6 +137,91 @@ export default function FileExplorer({
     onFolderCreated?.(folder);
   }
 
+  // =========================
+  // Render File
+  // =========================
+
+  function renderFile(file: FileType) {
+    const isActive =
+      activeFileId === file.id;
+
+    const isDeleting =
+      deletingFileId === file.id;
+
+    return (
+      <div
+        key={file.id}
+        className={`group mb-1 flex items-center rounded transition ${
+          isActive
+            ? "bg-blue-100"
+            : "hover:bg-gray-100"
+        }`}
+      >
+        {/* File */}
+
+        <button
+          type="button"
+          onClick={() =>
+            onFileSelect?.(file)
+          }
+          disabled={isDeleting}
+          className={`flex min-w-0 flex-1 items-center px-2 py-2 text-left text-sm ${
+            isActive
+              ? "font-semibold text-blue-700"
+              : "text-gray-700"
+          }`}
+        >
+          <span className="mr-2">
+            📄
+          </span>
+
+          <span className="truncate">
+            {file.name}
+          </span>
+        </button>
+
+        {/* Rename */}
+
+        <button
+          type="button"
+          onClick={() =>
+            setRenameFile(file)
+          }
+          disabled={isDeleting}
+          className="mr-1 rounded px-2 py-1 text-gray-400 opacity-0 transition group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-30"
+          title="Rename file"
+        >
+          ✎
+        </button>
+
+        {/* Delete */}
+
+        <button
+          type="button"
+          onClick={() =>
+            handleDeleteFile(file)
+          }
+          disabled={isDeleting}
+          className="mr-2 rounded px-2 py-1 text-red-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+          title="Delete file"
+        >
+          {isDeleting
+            ? "..."
+            : "🗑"}
+        </button>
+      </div>
+    );
+  }
+
+  // =========================
+  // Root Files
+  // =========================
+
+  const rootFiles = files.filter(
+    (file) =>
+      !file.folderId
+  );
+
   return (
     <>
       <aside className="w-full rounded-xl bg-white shadow">
@@ -158,22 +236,20 @@ export default function FileExplorer({
             Explorer
           </h2>
 
-          {/* Create Buttons */}
-
           <div className="flex items-center gap-2">
-
-            {/* Create Folder */}
 
             <CreateFolderButton
               projectId={projectId}
-              onCreated={handleFolderCreated}
+              onCreated={
+                handleFolderCreated
+              }
             />
-
-            {/* Create File */}
 
             <CreateFileButton
               projectId={projectId}
-              onFileCreated={handleFileCreated}
+              onFileCreated={
+                handleFileCreated
+              }
             />
 
           </div>
@@ -192,112 +268,70 @@ export default function FileExplorer({
           )}
 
         {/* =========================
-            Folder List
+            Folders
         ========================= */}
 
         {folders.length > 0 && (
           <div className="p-2">
 
-            {folders.map((folder) => (
-              <div
-                key={folder.id}
-                className="group mb-1 flex items-center rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100"
-              >
-                <span className="mr-2">
-                  📁
-                </span>
+            {folders.map((folder) => {
 
-                <span className="truncate">
-                  {folder.name}
-                </span>
-              </div>
-            ))}
+              const folderFiles =
+                files.filter(
+                  (file) =>
+                    file.folderId ===
+                    folder.id
+                );
+
+              return (
+                <div
+                  key={folder.id}
+                  className="mb-2"
+                >
+
+                  {/* Folder */}
+
+                  <div className="flex items-center rounded px-2 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100">
+
+                    <span className="mr-2">
+                      📁
+                    </span>
+
+                    <span className="truncate">
+                      {folder.name}
+                    </span>
+
+                  </div>
+
+                  {/* Files inside folder */}
+
+                  {folderFiles.length > 0 && (
+                    <div className="ml-5 border-l pl-2">
+                      {folderFiles.map(
+                        (file) =>
+                          renderFile(file)
+                      )}
+                    </div>
+                  )}
+
+                </div>
+              );
+            })}
 
           </div>
         )}
 
         {/* =========================
-            File List
+            Root Files
         ========================= */}
 
-        {files.length > 0 && (
+        {rootFiles.length > 0 && (
           <div className="p-2">
 
-            {files.map((file) => {
-              const isActive =
-                activeFileId === file.id;
-
-              const isDeleting =
-                deletingFileId === file.id;
-
-              return (
-                <div
-                  key={file.id}
-                  className={`group mb-1 flex items-center rounded transition ${
-                    isActive
-                      ? "bg-blue-100"
-                      : "hover:bg-gray-100"
-                  }`}
-                >
-
-                  {/* File */}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      onFileSelect?.(file)
-                    }
-                    disabled={isDeleting}
-                    className={`flex min-w-0 flex-1 items-center px-2 py-2 text-left text-sm ${
-                      isActive
-                        ? "font-semibold text-blue-700"
-                        : "text-gray-700"
-                    }`}
-                  >
-
-                    <span className="mr-2">
-                      📄
-                    </span>
-
-                    <span className="truncate">
-                      {file.name}
-                    </span>
-
-                  </button>
-
-                  {/* Rename */}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setRenameFile(file)
-                    }
-                    disabled={isDeleting}
-                    className="mr-1 rounded px-2 py-1 text-gray-400 opacity-0 transition group-hover:opacity-100 hover:bg-gray-200 hover:text-gray-800 disabled:cursor-not-allowed disabled:opacity-30"
-                    title="Rename file"
-                  >
-                    ✎
-                  </button>
-
-                  {/* Delete */}
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleDeleteFile(file)
-                    }
-                    disabled={isDeleting}
-                    className="mr-2 rounded px-2 py-1 text-red-400 opacity-0 transition group-hover:opacity-100 hover:bg-red-100 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-50"
-                    title="Delete file"
-                  >
-                    {isDeleting
-                      ? "..."
-                      : "🗑"}
-                  </button>
-
-                </div>
-              );
-            })}
+            {rootFiles.map(
+              (file) =>
+                renderFile(file)
+            )}
 
           </div>
         )}
@@ -327,7 +361,6 @@ export default function FileExplorer({
           }}
         />
       )}
-
     </>
   );
 }
