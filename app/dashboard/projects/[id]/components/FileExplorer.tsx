@@ -360,7 +360,7 @@ export default function FileExplorer({
             setRenameFile(null);
           }}
         /> 
-      )}
-    </>
+      )} 
+    </> 
   );    
 }       
