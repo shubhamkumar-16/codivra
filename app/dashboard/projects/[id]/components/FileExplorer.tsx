@@ -103,7 +103,10 @@ export default function FileExplorer({
 
       onFileDeleted?.(file.id);
     } catch (error) {
-      console.error(error);
+      console.error(
+        "DELETE FILE ERROR:",
+        error
+      );
 
       if (error instanceof Error) {
         window.alert(error.message);
@@ -141,7 +144,9 @@ export default function FileExplorer({
   // Render File
   // =========================
 
-  function renderFile(file: FileType) {
+  function renderFile(
+    file: FileType
+  ) {
     const isActive =
       activeFileId === file.id;
 
@@ -238,6 +243,8 @@ export default function FileExplorer({
 
           <div className="flex items-center gap-2">
 
+            {/* Create Folder */}
+
             <CreateFolderButton
               projectId={projectId}
               onCreated={
@@ -245,15 +252,17 @@ export default function FileExplorer({
               }
             />
 
+            {/* Create File */}
+
             <CreateFileButton
               projectId={projectId}
+              folders={folders}
               onFileCreated={
                 handleFileCreated
               }
             />
 
           </div>
-
         </div>
 
         {/* =========================
@@ -268,7 +277,7 @@ export default function FileExplorer({
           )}
 
         {/* =========================
-            Folders
+            Folder List
         ========================= */}
 
         {folders.length > 0 && (
@@ -307,10 +316,12 @@ export default function FileExplorer({
 
                   {folderFiles.length > 0 && (
                     <div className="ml-5 border-l pl-2">
+
                       {folderFiles.map(
                         (file) =>
                           renderFile(file)
                       )}
+
                     </div>
                   )}
 
@@ -359,8 +370,9 @@ export default function FileExplorer({
 
             setRenameFile(null);
           }}
-        /> 
-      )}  
-    </> 
-  );    
-} 
+        />
+      )}
+
+    </>
+  );
+}
